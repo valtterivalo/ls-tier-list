@@ -2,12 +2,18 @@ const axios = require('axios');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
-require('dotenv').config();
+
+// Load environment variables if dotenv is available
+try {
+  require('dotenv').config();
+} catch (err) {
+  console.log('dotenv not available, continuing without it');
+}
 
 console.log('Starting champion data seeding process...');
 
-// Determine environment
-const isProduction = process.env.NODE_ENV === 'production';
+// Determine environment - default to production for Render
+const isProduction = process.env.NODE_ENV !== 'development';
 console.log(`Seeding database in ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'} mode`);
 
 // Ensure db directory exists
