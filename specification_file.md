@@ -1,6 +1,6 @@
 # League of Legends Community Tier List Website Specification
-**Version**: 1.1  
-**Date**: March 07, 2025  
+**Version**: 1.2  
+**Date**: March 15, 2025  
 **Author**: Grok 3 (xAI) + Claude 3.7  
 **Purpose**: A minimalist, community-driven tier list for League of Legends champions, split by role, with up/down voting and admin controls.
 
@@ -23,15 +23,18 @@ This web application allows users to vote on League of Legends champions (up or 
    - Five separate tier lists: Top, Jungle, Mid, ADC, Support.
    - Tiers: God (1%), S (4%), A (15%), B (20%), C (20%), D (15%), F (4%), Shit (1%).
    - Percentages are applied per role, rounding up to the nearest whole champion.
+   - Champions start in B and C tiers until sufficient votes are collected.
 
 3. **Champion Roles** ✅
    - Champions can appear in multiple role-based tier lists (e.g., Maokai in Top, Jungle, Support).
-   - Roles are sourced from an external API (Riot's Data Dragon) and stored locally.
+   - Roles are sourced from champion_roles.json file with official Riot role data.
+   - Admin panel allows updating roles from the JSON file or manually per champion.
 
 4. **User Interface** ✅
-   - Minimalist design with a customizable color scheme (CSS variables).
+   - Dark mode design with customizable color scheme (CSS variables).
    - Each tier list displays champion portraits (fetched from Riot API) with up/down arrows for voting.
    - Current tier standings are visible to users before voting.
+   - Vote counts are hidden from users to prevent bias.
 
 5. **Admin Panel** ✅
    - Accessible via a secret URL with simple password authentication.
@@ -39,11 +42,18 @@ This web application allows users to vote on League of Legends champions (up or 
      - **Soft Reset**: Reduces all vote counts by a configurable percentage.
      - **Modify Roles**: Add/remove roles for a champion.
      - **Snapshot Management**: Save and restore from snapshots.
+     - **Testing Tools**: Simulate votes, verify tier distributions, and run health checks.
 
 6. **Safety and Recovery** ✅
    - Snapshots are saved automatically daily.
    - Manual snapshot creation via admin panel.
    - Restore to a snapshot via admin panel to recover from issues.
+
+7. **Testing and Maintenance** ✅
+   - Vote simulation for testing tier assignments.
+   - Tier distribution verification to ensure correct percentages.
+   - System health checks for monitoring.
+   - API endpoint for automated monitoring.
 
 ---
 
@@ -59,20 +69,24 @@ This web application allows users to vote on League of Legends champions (up or 
 - ✅ Admin panel with all required functionality
 - ✅ Automatic daily snapshots
 - ✅ Bayesian adjustment for fair tier assignment
+- ✅ Testing tools for vote simulation and verification
+- ✅ Health check endpoint for monitoring
+- ✅ Dark mode UI with customizable colors
 
-### Remaining Steps for MVP Deployment
-1. **Replit Deployment**:
-   - Create a new Replit project
-   - Upload the codebase to Replit
-   - Set up environment variables in Replit Secrets:
-     - `ADMIN_PASSWORD`
-     - `PORT` (optional, Replit will typically assign one)
-   - Run the initialization script: `npm run init`
-   - Configure Replit to run `npm start` on startup
+### Remaining Steps for Production Deployment
+1. **Server Deployment**:
+   - Choose a hosting provider (Replit, Heroku, Render, etc.)
+   - Set up environment variables:
+     - `ADMIN_PASSWORD` (required, strong password for admin access)
+     - `PORT` (optional, defaults to 5000)
+     - `NODE_ENV` (set to 'production' for production deployment)
+   - Configure persistent storage for the SQLite database
+   - Set up automatic backups (recommended daily)
 
 2. **Post-Deployment Verification**:
+   - Run the health check endpoint (`/api/health`)
    - Verify database seeding works correctly
-   - Test voting functionality
+   - Test voting functionality with simulated votes
    - Confirm tier assignments update properly
    - Test admin functions
    - Verify responsive design on mobile devices
@@ -132,10 +146,16 @@ For each champion in a role:
 
 #### Tier Assignment
 - Sort champions by `adjusted_score` descending within each role.
-- Assign to tiers based on percentage distribution:
+- If average votes per champion is below threshold (5), place champions in B and C tiers only.
+- Otherwise, assign to tiers based on percentage distribution:
   - Top 1% → God
   - Next 4% → S
-  - (and so on...)
+  - Next 15% → A
+  - Next 20% → B
+  - Next 20% → C
+  - Next 15% → D
+  - Next 4% → F
+  - Bottom 1% → Shit
 - Round up to the nearest whole champion per tier.
 - If rounding exceeds 100%, shift excess into B or C tiers (middle).
 
@@ -144,15 +164,99 @@ For each champion in a role:
 - **Rate Limiting**: Max 50 votes per IP address per 24 hours.
 - **Soft Reset**: Admin ability to reduce vote counts across the board.
 
+### Testing Tools ✅
+- **Vote Simulation**: Generate random votes for testing with configurable parameters:
+  - Number of votes to generate
+  - Role filtering
+  - Champion bias (certain champions receive more votes)
+- **Tier Verification**: Check if champions are distributed correctly across tiers
+- **Health Check**: Verify API and database connectivity
+
 ---
 
 ## Deployment
 
-### Replit Setup (To Be Completed)
-- Create a Node.js project on Replit
-- Upload the code to Replit
-- Configure environment variables in Replit Secrets
-- Run initialization scripts
+### Production Deployment Steps
+
+#### Option 1: Replit Deployment
+1. **Create a new Replit project**:
+   - Choose Node.js as the template
+   - Import the codebase from GitHub or upload files
+
+2. **Configure environment variables**:
+   - In Replit, go to "Secrets" tab
+   - Add the following secrets:
+     - `ADMIN_PASSWORD`: Strong password for admin access
+     - `PORT`: 3000 (or let Replit assign one)
+     - `NODE_ENV`: production
+
+3. **Initialize the application**:
+   - In the Replit shell, run:
+     ```
+     npm install
+     npm run init
+     ```
+   - This will install dependencies and seed the database
+
+4. **Configure Replit to run the application**:
+   - In the `.replit` file, ensure the run command is:
+     ```
+     run = "npm start"
+     ```
+
+5. **Set up persistent storage**:
+   - Enable Replit's persistent storage feature
+   - Ensure the `db` directory is in the persistent storage path
+
+#### Option 2: VPS/Cloud Deployment
+1. **Provision a server**:
+   - Minimum requirements: 1GB RAM, 1 CPU core
+   - Recommended OS: Ubuntu 20.04 LTS or newer
+
+2. **Install dependencies**:
+   ```bash
+   apt update && apt upgrade -y
+   apt install -y nodejs npm git
+   ```
+
+3. **Clone the repository**:
+   ```bash
+   git clone https://github.com/yourusername/ls-tierlist.git
+   cd ls-tierlist
+   ```
+
+4. **Set up environment variables**:
+   ```bash
+   echo 'ADMIN_PASSWORD=your_secure_password' > .env
+   echo 'PORT=3000' >> .env
+   echo 'NODE_ENV=production' >> .env
+   ```
+
+5. **Install dependencies and initialize**:
+   ```bash
+   npm install
+   npm run init
+   ```
+
+6. **Set up process manager (PM2)**:
+   ```bash
+   npm install -g pm2
+   pm2 start server.js --name ls-tierlist
+   pm2 startup
+   pm2 save
+   ```
+
+7. **Set up reverse proxy (Nginx)**:
+   ```bash
+   apt install -y nginx
+   ```
+   Configure Nginx to proxy requests to the Node.js application
+
+8. **Set up automatic backups**:
+   ```bash
+   mkdir -p /backups/ls-tierlist
+   ```
+   Create a cron job to copy the database file daily
 
 ### Directory Structure
 ```
@@ -163,10 +267,12 @@ ls-tierlist/
 │       ├── components/      # React components
 │       └── App.js           # Main React component
 ├── db/                      # SQLite database directory
+├── champion_roles/          # Champion role data
+│   └── champion_roles.json  # Official champion role data
+├── server/                  # Server-side code
+│   ├── middleware/          # Express middleware
+│   └── utils/               # Utility functions
 ├── server.js                # Express server main file
-├── errorHandler.js          # Error handling middleware
-├── rateLimit.js             # Rate limiting middleware
-├── utils.js                 # Utility functions
 ├── seed-champions.js        # Database seeding script
 ├── init.js                  # Initialization script
 ├── package.json             # Node.js dependencies
@@ -182,13 +288,16 @@ ls-tierlist/
 - ✅ **Backend**: API endpoints, database integration, voting logic
 - ✅ **Frontend**: Tier list UI, champion cards, voting UI
 - ✅ **Admin Panel**: Soft reset, role editing, snapshot management
-- ✅ **Testing**: API endpoints and core functionality verified
+- ✅ **Testing**: API endpoints, core functionality, and testing tools
+- ✅ **UI Improvements**: Dark mode, responsive design, usability enhancements
 
-### Remaining Tasks
-- Deploy to Replit or similar hosting service
-- Configure automatic restarts if needed
-- Set up proper domain (optional)
-- Create backup strategy for database
+### Production Readiness Checklist
+- ✅ **Security**: Password protection, rate limiting
+- ✅ **Data Integrity**: Snapshots, backups, validation
+- ✅ **Performance**: Optimized database queries, transaction support
+- ✅ **Monitoring**: Health check endpoint, error logging
+- ✅ **Documentation**: Updated specification, deployment instructions
+- ✅ **Testing**: Vote simulation, tier verification
 
 ---
 

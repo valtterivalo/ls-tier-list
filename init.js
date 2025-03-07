@@ -1,33 +1,40 @@
+const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
-const { spawn } = require('child_process');
+require('dotenv').config();
 
-// Ensure the db directory exists
+// Determine environment
+const isProduction = process.env.NODE_ENV === 'production';
+console.log(`Initializing application in ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'} mode`);
+
+// Create necessary directories
 const dbDir = path.join(__dirname, 'db');
 if (!fs.existsSync(dbDir)) {
-  console.log('Creating database directory...');
   fs.mkdirSync(dbDir);
+  console.log('Created db directory');
 }
 
-// Check if .env file exists, create one if it doesn't
-const envFile = path.join(__dirname, '.env');
-if (!fs.existsSync(envFile)) {
-  console.log('Creating default .env file...');
-  fs.writeFileSync(envFile, 'ADMIN_PASSWORD=admin123\nPORT=5000');
-}
-
-// Run seed-champions.js to populate the database
-console.log('Seeding database with champion data...');
-const seed = spawn('node', ['seed-champions.js'], { stdio: 'inherit' });
-
-seed.on('close', (code) => {
-  if (code !== 0) {
-    console.error('Error seeding database');
-    process.exit(1);
-  }
+// Clean up existing database if requested
+if (process.argv.includes('--clean')) {
+  const dbFileName = isProduction ? 'tierlist-prod.db' : 'tierlist-dev.db';
+  const dbFile = path.join(dbDir, dbFileName);
   
-  console.log('\nDatabase setup complete!');
-  console.log('\nYou can now run the application with:');
-  console.log('  npm run dev    - Development mode with live reloading');
-  console.log('  npm start      - Production mode\n');
-}); 
+  if (fs.existsSync(dbFile)) {
+    fs.unlinkSync(dbFile);
+    console.log(`Removed existing database: ${dbFileName}`);
+  }
+}
+
+// Run seed script to populate database
+console.log('Running champion seeding script...');
+try {
+  execSync('node seed-champions.js', { stdio: 'inherit' });
+  console.log('Database seeding completed successfully');
+} catch (error) {
+  console.error('Database seeding failed:', error);
+  process.exit(1);
+}
+
+console.log('Initialization completed successfully.');
+console.log(`The application is ready to run in ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'} mode.`);
+console.log('Start the server with: npm start'); 

@@ -2,6 +2,13 @@ const axios = require('axios');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
+require('dotenv').config();
+
+console.log('Starting champion data seeding process...');
+
+// Determine environment
+const isProduction = process.env.NODE_ENV === 'production';
+console.log(`Seeding database in ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'} mode`);
 
 // Ensure db directory exists
 const dbDir = path.join(__dirname, 'db');
@@ -9,8 +16,12 @@ if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir);
 }
 
+// Use environment-specific database file
+const dbFileName = isProduction ? 'tierlist-prod.db' : 'tierlist-dev.db';
+const dbFile = path.join(__dirname, 'db', dbFileName);
+console.log(`Using database file: ${dbFile}`);
+
 // Database setup
-const dbFile = path.join(__dirname, 'db', 'tierlist.db');
 const db = new sqlite3.Database(dbFile, (err) => {
   if (err) {
     console.error('Error opening database', err.message);
@@ -35,7 +46,15 @@ function createTables() {
         console.error('Error creating champions table:', err.message);
       } else {
         console.log('Champions table created or already exists.');
-        fetchAndSeedChampions();
+        // First clear the champions table to avoid duplication issues
+        db.run('DELETE FROM champions', [], (err) => {
+          if (err) {
+            console.error('Error clearing champions table:', err.message);
+          } else {
+            console.log('Champions table cleared successfully.');
+            fetchAndSeedChampions();
+          }
+        });
       }
     });
   });
@@ -53,167 +72,36 @@ async function fetchAndSeedChampions() {
     const championsResponse = await axios.get(`https://ddragon.leagueoflegends.com/cdn/${latestVersion}/data/en_US/champion.json`);
     const championsData = championsResponse.data.data;
 
-    // For this MVP, we'll assign roles based on a predefined mapping
-    // In a real application, you might want to use a more sophisticated approach
+    // Read champion roles from JSON file if it exists, else use default roles
+    let championRolesData = {};
+    const rolesFilePath = path.join(__dirname, 'champion_roles', 'champion_roles.json');
+    
+    if (fs.existsSync(rolesFilePath)) {
+      console.log('Loading champion roles from champion_roles.json');
+      const fileContents = fs.readFileSync(rolesFilePath, 'utf8');
+      championRolesData = JSON.parse(fileContents);
+      console.log(`Loaded ${Object.keys(championRolesData).length} champions from roles file`);
+      
+      // Debug: Check some specific champions
+      ['Bel\'Veth', 'Sona', 'Lillia', 'Kog\'Maw', 'Milio'].forEach(name => {
+        if (championRolesData[name]) {
+          console.log(`${name} in JSON: ${championRolesData[name].join(', ')}`);
+        } else {
+          console.log(`${name} not found in roles JSON`);
+        }
+      });
+    } else {
+      console.log(`WARNING: No champion_roles.json found at ${rolesFilePath}`);
+      console.log('Using default role assignments for all champions.');
+    }
+
+    // Map Riot role names to our format
     const roleMapping = {
-      // Top lane champions
-      'Aatrox': ['Top'],
-      'Camille': ['Top'],
-      'Darius': ['Top'],
-      'Fiora': ['Top'],
-      'Gangplank': ['Top'],
-      'Garen': ['Top'],
-      'Gnar': ['Top'],
-      'Illaoi': ['Top'],
-      'Irelia': ['Top', 'Mid'],
-      'Jax': ['Top', 'Jungle'],
-      'Jayce': ['Top', 'Mid'],
-      'Kayle': ['Top', 'Mid'],
-      'Kennen': ['Top'],
-      'Kled': ['Top'],
-      'Malphite': ['Top', 'Support'],
-      'Maokai': ['Top', 'Support', 'Jungle'],
-      'Mordekaiser': ['Top'],
-      'Nasus': ['Top'],
-      'Ornn': ['Top'],
-      'Pantheon': ['Top', 'Mid', 'Support'],
-      'Poppy': ['Top', 'Jungle'],
-      'Quinn': ['Top'],
-      'Renekton': ['Top'],
-      'Riven': ['Top'],
-      'Rumble': ['Top', 'Mid'],
-      'Sett': ['Top', 'Support'],
-      'Shen': ['Top', 'Support'],
-      'Singed': ['Top'],
-      'Sion': ['Top'],
-      'Teemo': ['Top'],
-      'Tryndamere': ['Top'],
-      'Urgot': ['Top'],
-      'Volibear': ['Top', 'Jungle'],
-      'Wukong': ['Top', 'Jungle'],
-      'Yorick': ['Top'],
-      
-      // Jungle champions
-      'Amumu': ['Jungle'],
-      'Diana': ['Jungle', 'Mid'],
-      'Ekko': ['Jungle', 'Mid'],
-      'Elise': ['Jungle'],
-      'Evelynn': ['Jungle'],
-      'Fiddlesticks': ['Jungle'],
-      'Gragas': ['Jungle', 'Top'],
-      'Graves': ['Jungle'],
-      'Hecarim': ['Jungle'],
-      'Ivern': ['Jungle'],
-      'Jarvan IV': ['Jungle'],
-      'Karthus': ['Jungle'],
-      'Kayn': ['Jungle'],
-      'Khazix': ['Jungle'],
-      'Kindred': ['Jungle'],
-      'Lee Sin': ['Jungle'],
-      'Lillia': ['Jungle', 'Top'],
-      'Master Yi': ['Jungle'],
-      'Nidalee': ['Jungle'],
-      'Nocturne': ['Jungle', 'Mid'],
-      'Nunu & Willump': ['Jungle'],
-      'Olaf': ['Jungle', 'Top'],
-      'Rammus': ['Jungle'],
-      'RekSai': ['Jungle'],
-      'Rengar': ['Jungle', 'Top'],
-      'Sejuani': ['Jungle'],
-      'Shaco': ['Jungle', 'Support'],
-      'Shyvana': ['Jungle'],
-      'Skarner': ['Jungle'],
-      'Taliyah': ['Jungle', 'Mid'],
-      'Trundle': ['Jungle', 'Top'],
-      'Udyr': ['Jungle'],
-      'Vi': ['Jungle'],
-      'Viego': ['Jungle', 'Mid'],
-      'Warwick': ['Jungle', 'Top'],
-      'Xin Zhao': ['Jungle'],
-      'Zac': ['Jungle'],
-      
-      // Mid lane champions
-      'Ahri': ['Mid'],
-      'Akali': ['Mid', 'Top'],
-      'Anivia': ['Mid'],
-      'Annie': ['Mid', 'Support'],
-      'Aurelion Sol': ['Mid'],
-      'Azir': ['Mid'],
-      'Brand': ['Mid', 'Support'],
-      'Cassiopeia': ['Mid'],
-      'Corki': ['Mid'],
-      'Fizz': ['Mid'],
-      'Galio': ['Mid', 'Support'],
-      'Heimerdinger': ['Mid', 'Top'],
-      'Kassadin': ['Mid'],
-      'Katarina': ['Mid'],
-      'LeBlanc': ['Mid'],
-      'Lissandra': ['Mid'],
-      'Lux': ['Mid', 'Support'],
-      'Malzahar': ['Mid'],
-      'Neeko': ['Mid', 'Support'],
-      'Orianna': ['Mid'],
-      'Qiyana': ['Mid'],
-      'Ryze': ['Mid', 'Top'],
-      'Sylas': ['Mid', 'Top'],
-      'Syndra': ['Mid'],
-      'Talon': ['Mid'],
-      'Twisted Fate': ['Mid'],
-      'Veigar': ['Mid', 'Support'],
-      'Viktor': ['Mid'],
-      'Vladimir': ['Mid', 'Top'],
-      'Xerath': ['Mid', 'Support'],
-      'Yasuo': ['Mid', 'Top'],
-      'Yone': ['Mid', 'Top'],
-      'Zed': ['Mid'],
-      'Ziggs': ['Mid', 'ADC'],
-      'Zoe': ['Mid', 'Support'],
-      
-      // ADC champions
-      'Aphelios': ['ADC'],
-      'Ashe': ['ADC', 'Support'],
-      'Caitlyn': ['ADC'],
-      'Draven': ['ADC'],
-      'Ezreal': ['ADC'],
-      'Jhin': ['ADC'],
-      'Jinx': ['ADC'],
-      'Kaisa': ['ADC'],
-      'Kalista': ['ADC'],
-      'Kogmaw': ['ADC'],
-      'Lucian': ['ADC', 'Mid'],
-      'Miss Fortune': ['ADC', 'Support'],
-      'Samira': ['ADC'],
-      'Senna': ['ADC', 'Support'],
-      'Sivir': ['ADC'],
-      'Tristana': ['ADC', 'Mid'],
-      'Twitch': ['ADC', 'Jungle'],
-      'Varus': ['ADC', 'Mid'],
-      'Vayne': ['ADC', 'Top'],
-      'Xayah': ['ADC'],
-      
-      // Support champions
-      'Alistar': ['Support'],
-      'Bard': ['Support'],
-      'Blitzcrank': ['Support'],
-      'Braum': ['Support'],
-      'Janna': ['Support'],
-      'Karma': ['Support', 'Mid'],
-      'Leona': ['Support'],
-      'Lulu': ['Support'],
-      'Morgana': ['Support', 'Mid'],
-      'Nami': ['Support'],
-      'Nautilus': ['Support'],
-      'Pyke': ['Support'],
-      'Rakan': ['Support'],
-      'Rell': ['Support'],
-      'Seraphine': ['Support', 'Mid'],
-      'Soraka': ['Support'],
-      'Tahm Kench': ['Support', 'Top'],
-      'Taric': ['Support'],
-      'Thresh': ['Support'],
-      'Yuumi': ['Support'],
-      'Zilean': ['Support', 'Mid'],
-      'Zyra': ['Support', 'Mid']
+      'TOP': 'Top',
+      'JUNGLE': 'Jungle',
+      'MIDDLE': 'Mid',
+      'BOTTOM': 'ADC',
+      'UTILITY': 'Support'
     };
 
     // Process each champion
@@ -222,8 +110,36 @@ async function fetchAndSeedChampions() {
 
     for (const champion of champions) {
       const name = champion.name;
-      // Use our predefined roles or default to all roles if not found
-      const roles = roleMapping[name] || ['Top', 'Jungle', 'Mid', 'ADC', 'Support'];
+      
+      // Use roles from JSON file if available, otherwise assign all roles
+      let roles;
+      if (championRolesData[name]) {
+        // Map roles from Riot format to our format
+        roles = championRolesData[name].map(role => roleMapping[role] || role);
+        console.log(`Setting roles for ${name}: ${roles.join(', ')} (from JSON)`);
+      } else {
+        // Only for champions not in JSON - assign default role based on Riot's tag
+        if (champion.tags && champion.tags.length > 0) {
+          // Try to guess primary role from champion tags
+          const tagToRole = {
+            'Fighter': ['Top', 'Jungle'], 
+            'Tank': ['Top', 'Support'],
+            'Mage': ['Mid', 'Support'],
+            'Assassin': ['Mid', 'Jungle'],
+            'Marksman': ['ADC'],
+            'Support': ['Support']
+          };
+          
+          const primaryTag = champion.tags[0];
+          roles = tagToRole[primaryTag] || ['Top', 'Jungle', 'Mid', 'ADC', 'Support'];
+          console.log(`${name} not in JSON. Guessing role from tag ${primaryTag}: ${roles.join(', ')}`);
+        } else {
+          // Fallback if no tags
+          roles = ['Top', 'Jungle', 'Mid', 'ADC', 'Support'];
+          console.log(`${name} not in JSON and no tags. Assigning all roles.`);
+        }
+      }
+      
       const portraitUrl = `https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/champion/${champion.image.full}`;
 
       // Insert champion into database
@@ -240,7 +156,22 @@ async function fetchAndSeedChampions() {
             // Check if all champions have been processed
             if (insertCount === champions.length) {
               console.log('All champions have been seeded successfully!');
-              db.close();
+              console.log('Running a check for specific champions:');
+              
+              // Verify insertion of specific champions
+              db.all('SELECT name, roles FROM champions WHERE name IN (?, ?, ?, ?, ?)', 
+                ['Bel\'Veth', 'Sona', 'Lillia', 'Kog\'Maw', 'Milio'], 
+                (err, rows) => {
+                  if (err) {
+                    console.error('Error checking champions:', err);
+                  } else {
+                    rows.forEach(row => {
+                      console.log(`DB check: ${row.name} has roles: ${row.roles}`);
+                    });
+                  }
+                  db.close();
+                }
+              );
             }
           }
         }
@@ -248,7 +179,7 @@ async function fetchAndSeedChampions() {
     }
   } catch (error) {
     console.error('Error fetching or seeding champion data:', error);
-    db.close();
+    process.exit(1);
   }
 }
 

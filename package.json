@@ -12,7 +12,12 @@
     "build": "cd client && npm run build",
     "install-client": "cd client && npm install",
     "heroku-postbuild": "npm run install-client && npm run build",
-    "init": "node init.js"
+    "init": "node init.js",
+    "init:dev": "cross-env NODE_ENV=development node init.js",
+    "init:prod": "cross-env NODE_ENV=production node init.js --clean",
+    "start:dev": "cross-env NODE_ENV=development nodemon server.js",
+    "start:prod": "cross-env NODE_ENV=production node server.js",
+    "setup:prod": "npm install && npm run install-client && npm run build && npm run init:prod"
   },
   "keywords": [
     "league of legends",
@@ -33,6 +38,7 @@
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
     "nodemon": "^3.0.3"
   }
 }

@@ -42,7 +42,8 @@ const applyBayesianAdjustment = (champions, k = 10, threshold = 10) => {
     
     return {
       ...champion,
-      adjustedScore: score
+      adjustedScore: score,
+      totalVotes // Add totalVotes to the champion object for tier assignment logic
     };
   });
 };
@@ -59,7 +60,25 @@ const assignTiersToChampions = (champions) => {
     b.adjustedScore - a.adjustedScore
   );
   
-  // Define tier percentages
+  // Check if there's enough voting activity to apply percentage-based tiers
+  // Calculate total votes across all champions
+  const totalVotesAcrossAllChampions = sortedChampions.reduce((sum, champ) => 
+    sum + (champ.totalVotes || 0), 0);
+  
+  // If there's minimal voting activity, place champions in B and C tiers only
+  if (totalVotesAcrossAllChampions < sortedChampions.length * 5) { // Threshold: avg 5 votes per champion
+    // Split champions roughly in half between B and C tiers
+    const totalChampions = sortedChampions.length;
+    const halfIndex = Math.floor(totalChampions / 2);
+    
+    return sortedChampions.map((champion, index) => {
+      // First half goes to B tier, second half to C tier
+      const tier = index < halfIndex ? 'B' : 'C';
+      return { ...champion, tier };
+    });
+  }
+  
+  // Define tier percentages for normal assignment
   const tierPercentages = {
     'God': 0.01,  // Top 1%
     'S': 0.04,    // Next 4%
