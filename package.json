@@ -17,8 +17,7 @@
     "init:prod": "cross-env NODE_ENV=production node init.js --clean",
     "start:dev": "cross-env NODE_ENV=development nodemon server.js",
     "start:prod": "cross-env NODE_ENV=production node server.js",
-    "setup:prod": "npm install && npm run install-client && npm run build && npm run init:prod",
-    "render-build": "npm ci && cd client && npm ci && npx react-scripts build && cd .. && node init-render.js"
+    "setup:prod": "npm install && npm run install-client && npm run build && npm run init:prod"
   },
   "keywords": [
     "league of legends",
@@ -41,8 +40,5 @@
     "concurrently": "^8.2.2",
     "cross-env": "^7.0.3",
     "nodemon": "^3.0.3"
-  },
-  "engines": {
-    "node": ">=16.0.0"
   }
 }
