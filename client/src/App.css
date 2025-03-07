@@ -1,0 +1,108 @@
+:root {
+  /* Color scheme */
+  --primary-color: #d75b60;
+  --primary-color-dark: #c04a4f;
+  --secondary-color: #1b1b1d;
+  --text-color: #e3e3e3;
+  --text-secondary: #b0b0b0;
+  --border-color: #333;
+  --card-bg-color: #242526;
+  --disabled-color: #888;
+  
+  /* Voting colors */
+  --upvote-color: #4caf50;
+  --upvote-color-muted: #a5d6a7;
+  --upvote-bg: rgba(76, 175, 80, 0.1);
+  --upvote-bg-hover: rgba(76, 175, 80, 0.2);
+  --downvote-color: #f44336;
+  --downvote-color-muted: #ef9a9a;
+  --downvote-bg: rgba(244, 67, 54, 0.1);
+  --downvote-bg-hover: rgba(244, 67, 54, 0.2);
+  
+  /* Feedback colors */
+  --success-color: #4caf50;
+  --success-bg: rgba(76, 175, 80, 0.1);
+  --error-color: #f44336;
+  --error-bg: rgba(244, 67, 54, 0.1);
+  
+  /* Navbar and app background */
+  --app-bg: #1b1b1d;
+  --navbar-bg: #242526;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--app-bg);
+  color: var(--text-color);
+  line-height: 1.6;
+}
+
+.App {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--app-bg);
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  font-size: 1.2rem;
+  color: var(--text-secondary);
+}
+
+.error {
+  color: var(--error-color);
+  text-align: center;
+  padding: 1rem;
+  margin: 1rem 0;
+  background-color: var(--error-bg);
+  border-radius: 4px;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: var(--navbar-bg);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: var(--primary-color);
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

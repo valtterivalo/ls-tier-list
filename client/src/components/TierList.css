@@ -1,0 +1,76 @@
+.tier-list-container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.tier-list-container h1 {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: var(--primary-color);
+  font-size: 2rem;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.tier-row {
+  display: flex;
+  margin-bottom: 1rem;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  background-color: var(--card-bg-color);
+  border-left: 4px solid var(--primary-color);
+}
+
+.tier-label {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 80px;
+  min-width: 80px;
+  color: white;
+  font-weight: bold;
+  font-size: 1.5rem;
+  padding: 1rem 0;
+}
+
+.champions-container {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 1rem;
+  justify-content: flex-start;
+}
+
+.loading, .error {
+  text-align: center;
+  margin: 3rem auto;
+  font-size: 1.2rem;
+  color: var(--text-color);
+  background-color: var(--card-bg-color);
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  max-width: 500px;
+}
+
+.error {
+  color: var(--error-color);
+  border-left: 4px solid var(--error-color);
+}
+
+@media (max-width: 768px) {
+  .tier-row {
+    flex-direction: column;
+  }
+  
+  .tier-label {
+    width: 100%;
+    min-width: 100%;
+    padding: 0.5rem 0;
+  }
+  
+  .champions-container {
+    justify-content: center;
+  }
+} 
