@@ -1,0 +1,530 @@
+{
+    "Annie": [
+        "MIDDLE"
+    ],
+    "Olaf": [
+        "TOP"
+    ],
+    "Galio": [
+        "MIDDLE"
+    ],
+    "Twisted Fate": [
+        "MIDDLE"
+    ],
+    "Xin Zhao": [
+        "JUNGLE"
+    ],
+    "Urgot": [
+        "TOP"
+    ],
+    "LeBlanc": [
+        "MIDDLE"
+    ],
+    "Vladimir": [
+        "MIDDLE",
+        "TOP"
+    ],
+    "Fiddlesticks": [
+        "JUNGLE"
+    ],
+    "Kayle": [
+        "TOP"
+    ],
+    "Master Yi": [
+        "JUNGLE"
+    ],
+    "Alistar": [
+        "UTILITY"
+    ],
+    "Ryze": [
+        "MIDDLE"
+    ],
+    "Sion": [
+        "TOP"
+    ],
+    "Sivir": [
+        "BOTTOM"
+    ],
+    "Soraka": [
+        "UTILITY"
+    ],
+    "Teemo": [
+        "TOP"
+    ],
+    "Tristana": [
+        "BOTTOM"
+    ],
+    "Warwick": [
+        "JUNGLE",
+        "TOP"
+    ],
+    "Nunu & Willump": [
+        "JUNGLE"
+    ],
+    "Miss Fortune": [
+        "BOTTOM"
+    ],
+    "Ashe": [
+        "BOTTOM"
+    ],
+    "Tryndamere": [
+        "TOP"
+    ],
+    "Jax": [
+        "TOP"
+    ],
+    "Morgana": [
+        "UTILITY"
+    ],
+    "Zilean": [
+        "UTILITY"
+    ],
+    "Singed": [
+        "TOP"
+    ],
+    "Evelynn": [
+        "JUNGLE"
+    ],
+    "Twitch": [
+        "BOTTOM"
+    ],
+    "Karthus": [
+        "JUNGLE"
+    ],
+    "Cho'Gath": [
+        "TOP"
+    ],
+    "Amumu": [
+        "JUNGLE"
+    ],
+    "Rammus": [
+        "JUNGLE"
+    ],
+    "Anivia": [
+        "MIDDLE"
+    ],
+    "Shaco": [
+        "JUNGLE"
+    ],
+    "Dr. Mundo": [
+        "TOP"
+    ],
+    "Sona": [
+        "UTILITY"
+    ],
+    "Kassadin": [
+        "MIDDLE"
+    ],
+    "Irelia": [
+        "TOP",
+        "MIDDLE"
+    ],
+    "Janna": [
+        "UTILITY"
+    ],
+    "Gangplank": [
+        "TOP"
+    ],
+    "Corki": [
+        "BOTTOM"
+    ],
+    "Karma": [
+        "UTILITY"
+    ],
+    "Taric": [
+        "UTILITY"
+    ],
+    "Veigar": [
+        "MIDDLE"
+    ],
+    "Trundle": [
+        "TOP"
+    ],
+    "Swain": [
+        "UTILITY"
+    ],
+    "Caitlyn": [
+        "BOTTOM"
+    ],
+    "Blitzcrank": [
+        "UTILITY"
+    ],
+    "Malphite": [
+        "TOP"
+    ],
+    "Katarina": [
+        "MIDDLE"
+    ],
+    "Nocturne": [
+        "JUNGLE"
+    ],
+    "Maokai": [
+        "UTILITY"
+    ],
+    "Renekton": [
+        "TOP"
+    ],
+    "Jarvan IV": [
+        "JUNGLE"
+    ],
+    "Elise": [
+        "UTILITY",
+        "JUNGLE"
+    ],
+    "Orianna": [
+        "MIDDLE"
+    ],
+    "Wukong": [
+        "JUNGLE"
+    ],
+    "Brand": [
+        "UTILITY"
+    ],
+    "Lee Sin": [
+        "JUNGLE"
+    ],
+    "Vayne": [
+        "BOTTOM"
+    ],
+    "Rumble": [
+        "TOP"
+    ],
+    "Cassiopeia": [
+        "MIDDLE"
+    ],
+    "Skarner": [
+        "JUNGLE"
+    ],
+    "Heimerdinger": [
+        "TOP"
+    ],
+    "Nasus": [
+        "TOP"
+    ],
+    "Nidalee": [
+        "JUNGLE"
+    ],
+    "Udyr": [
+        "JUNGLE"
+    ],
+    "Poppy": [
+        "UTILITY"
+    ],
+    "Gragas": [
+        "TOP",
+        "JUNGLE"
+    ],
+    "Pantheon": [
+        "JUNGLE",
+        "UTILITY",
+        "TOP"
+    ],
+    "Ezreal": [
+        "BOTTOM"
+    ],
+    "Mordekaiser": [
+        "TOP"
+    ],
+    "Yorick": [
+        "TOP"
+    ],
+    "Akali": [
+        "MIDDLE"
+    ],
+    "Kennen": [
+        "TOP"
+    ],
+    "Garen": [
+        "TOP"
+    ],
+    "Leona": [
+        "UTILITY"
+    ],
+    "Malzahar": [
+        "MIDDLE"
+    ],
+    "Talon": [
+        "JUNGLE",
+        "MIDDLE"
+    ],
+    "Riven": [
+        "TOP"
+    ],
+    "Kog'Maw": [
+        "BOTTOM"
+    ],
+    "Shen": [
+        "TOP"
+    ],
+    "Lux": [
+        "UTILITY",
+        "MIDDLE"
+    ],
+    "Xerath": [
+        "MIDDLE",
+        "UTILITY"
+    ],
+    "Shyvana": [
+        "JUNGLE"
+    ],
+    "Ahri": [
+        "MIDDLE"
+    ],
+    "Graves": [
+        "JUNGLE"
+    ],
+    "Fizz": [
+        "MIDDLE"
+    ],
+    "Volibear": [
+        "TOP",
+        "JUNGLE"
+    ],
+    "Rengar": [
+        "JUNGLE"
+    ],
+    "Varus": [
+        "BOTTOM"
+    ],
+    "Nautilus": [
+        "UTILITY"
+    ],
+    "Viktor": [
+        "MIDDLE"
+    ],
+    "Sejuani": [
+        "JUNGLE"
+    ],
+    "Fiora": [
+        "TOP"
+    ],
+    "Ziggs": [
+        "BOTTOM"
+    ],
+    "Lulu": [
+        "UTILITY"
+    ],
+    "Draven": [
+        "BOTTOM"
+    ],
+    "Hecarim": [
+        "JUNGLE"
+    ],
+    "Kha'Zix": [
+        "JUNGLE"
+    ],
+    "Darius": [
+        "TOP"
+    ],
+    "Jayce": [
+        "TOP"
+    ],
+    "Lissandra": [
+        "MIDDLE"
+    ],
+    "Diana": [
+        "JUNGLE",
+        "MIDDLE"
+    ],
+    "Quinn": [
+        "TOP"
+    ],
+    "Syndra": [
+        "MIDDLE"
+    ],
+    "Aurelion Sol": [
+        "MIDDLE"
+    ],
+    "Kayn": [
+        "JUNGLE"
+    ],
+    "Zoe": [
+        "MIDDLE"
+    ],
+    "Zyra": [
+        "UTILITY",
+        "JUNGLE"
+    ],
+    "Kai'Sa": [
+        "BOTTOM"
+    ],
+    "Seraphine": [
+        "UTILITY"
+    ],
+    "Gnar": [
+        "TOP"
+    ],
+    "Zac": [
+        "JUNGLE"
+    ],
+    "Yasuo": [
+        "MIDDLE"
+    ],
+    "Vel'Koz": [
+        "UTILITY"
+    ],
+    "Taliyah": [
+        "MIDDLE"
+    ],
+    "Camille": [
+        "TOP"
+    ],
+    "Akshan": [
+        "MIDDLE"
+    ],
+    "Bel'Veth": [
+        "JUNGLE"
+    ],
+    "Braum": [
+        "UTILITY"
+    ],
+    "Jhin": [
+        "BOTTOM"
+    ],
+    "Kindred": [
+        "JUNGLE"
+    ],
+    "Zeri": [
+        "BOTTOM"
+    ],
+    "Jinx": [
+        "BOTTOM"
+    ],
+    "Tahm Kench": [
+        "UTILITY",
+        "TOP"
+    ],
+    "Briar": [
+        "JUNGLE"
+    ],
+    "Viego": [
+        "JUNGLE"
+    ],
+    "Senna": [
+        "UTILITY"
+    ],
+    "Lucian": [
+        "BOTTOM"
+    ],
+    "Zed": [
+        "MIDDLE"
+    ],
+    "Kled": [
+        "TOP"
+    ],
+    "Ekko": [
+        "JUNGLE",
+        "MIDDLE"
+    ],
+    "Qiyana": [
+        "MIDDLE"
+    ],
+    "Vi": [
+        "JUNGLE"
+    ],
+    "Aatrox": [
+        "TOP"
+    ],
+    "Nami": [
+        "UTILITY"
+    ],
+    "Azir": [
+        "MIDDLE"
+    ],
+    "Yuumi": [
+        "UTILITY"
+    ],
+    "Samira": [
+        "BOTTOM"
+    ],
+    "Thresh": [
+        "UTILITY"
+    ],
+    "Illaoi": [
+        "TOP"
+    ],
+    "Rek'Sai": [
+        "JUNGLE"
+    ],
+    "Ivern": [
+        "JUNGLE"
+    ],
+    "Kalista": [
+        "BOTTOM"
+    ],
+    "Bard": [
+        "UTILITY"
+    ],
+    "Rakan": [
+        "UTILITY"
+    ],
+    "Xayah": [
+        "BOTTOM"
+    ],
+    "Ornn": [
+        "TOP"
+    ],
+    "Sylas": [
+        "MIDDLE"
+    ],
+    "Neeko": [
+        "UTILITY"
+    ],
+    "Aphelios": [
+        "BOTTOM"
+    ],
+    "Rell": [
+        "UTILITY"
+    ],
+    "Pyke": [
+        "UTILITY"
+    ],
+    "Vex": [
+        "MIDDLE"
+    ],
+    "Yone": [
+        "MIDDLE",
+        "TOP"
+    ],
+    "Ambessa": [
+        "TOP"
+    ],
+    "Mel": [
+        "MIDDLE",
+        "UTILITY",
+        "BOTTOM"
+    ],
+    "Sett": [
+        "TOP"
+    ],
+    "Lillia": [
+        "JUNGLE"
+    ],
+    "Gwen": [
+        "TOP"
+    ],
+    "Renata Glasc": [
+        "UTILITY"
+    ],
+    "Aurora": [
+        "MIDDLE"
+    ],
+    "Nilah": [
+        "BOTTOM"
+    ],
+    "K'Sante": [
+        "TOP"
+    ],
+    "Smolder": [
+        "BOTTOM"
+    ],
+    "Milio": [
+        "UTILITY"
+    ],
+    "Hwei": [
+        "MIDDLE"
+    ],
+    "Naafiri": [
+        "MIDDLE"
+    ]
+}
