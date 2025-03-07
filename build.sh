@@ -2,6 +2,7 @@
 # Direct build script for Render
 
 set -e  # Exit immediately if a command exits with a non-zero status
+set -x  # Print each command before executing (for debugging)
 
 echo "=== Installing root dependencies ==="
 npm ci
@@ -10,9 +11,13 @@ echo "=== Installing client dependencies ==="
 cd client
 npm ci
 
+echo "=== Checking for react-scripts ==="
+ls -la node_modules/.bin || echo "bin directory not found"
+ls -la node_modules/react-scripts || echo "react-scripts not found"
+
 echo "=== Building React app ==="
-# Call react-scripts directly from node_modules to avoid any script recursion
-./node_modules/.bin/react-scripts build
+# Use npx instead of direct path to ensure react-scripts is found
+npx react-scripts build
 cd ..
 
 echo "=== Setting up database ==="
