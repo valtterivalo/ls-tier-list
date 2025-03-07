@@ -6,6 +6,8 @@ const AdminPanel = () => {
   const [password, setPassword] = useState('');
   const [authenticated, setAuthenticated] = useState(false);
   const [resetPercentage, setResetPercentage] = useState(50);
+  const [clearUserVotes, setClearUserVotes] = useState(false);
+  const [resetUserVoting, setResetUserVoting] = useState(false);
   const [snapshots, setSnapshots] = useState([]);
   const [selectedSnapshot, setSelectedSnapshot] = useState('');
   const [message, setMessage] = useState('');
@@ -16,6 +18,11 @@ const AdminPanel = () => {
   const [updateStats, setUpdateStats] = useState(null);
   const [testResults, setTestResults] = useState(null);
   const [tierVerification, setTierVerification] = useState(null);
+  
+  // Export/Import settings
+  const [exportRole, setExportRole] = useState('All');
+  const [importedVotes, setImportedVotes] = useState(null);
+  const [replaceExistingVotes, setReplaceExistingVotes] = useState(true);
   
   // Testing settings
   const [voteSimSettings, setVoteSimSettings] = useState({
@@ -85,6 +92,8 @@ const AdminPanel = () => {
       setLoading(true);
       const response = await axios.post('/api/admin/soft-reset', {
         percentage: resetPercentage,
+        clearUserVotes,
+        resetUserVoting,
         password
       });
       setMessage(response.data.message);
@@ -319,6 +328,62 @@ const AdminPanel = () => {
       .sort();
   };
 
+  // Export votes
+  const handleExportVotes = async () => {
+    try {
+      setLoading(true);
+      const role = exportRole === 'All' ? '' : exportRole;
+      window.location.href = `/api/admin/export-votes?password=${encodeURIComponent(password)}&role=${role}`;
+      setMessage('Vote export started');
+      setLoading(false);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to export votes');
+      setLoading(false);
+    }
+  };
+
+  // Handle file upload for import
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const jsonData = JSON.parse(e.target.result);
+        setImportedVotes(jsonData);
+        setMessage(`Loaded ${jsonData.length} vote records. Click Import to continue.`);
+      } catch (err) {
+        setError('Invalid JSON file');
+        setImportedVotes(null);
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  // Import votes
+  const handleImportVotes = async () => {
+    if (!importedVotes) {
+      setError('No valid vote data to import');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await axios.post('/api/admin/import-votes', {
+        password,
+        votes: importedVotes,
+        replace: replaceExistingVotes
+      });
+      setMessage(`Votes imported: ${response.data.stats.total} (${response.data.stats.upvotes} up, ${response.data.stats.downvotes} down)`);
+      setImportedVotes(null);
+      setLoading(false);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to import votes');
+      setLoading(false);
+    }
+  };
+
   // JSX structure with testing section added
   return (
     <div className="admin-panel">
@@ -340,10 +405,10 @@ const AdminPanel = () => {
         <div className="admin-controls">
           <h1>Admin Panel</h1>
           
-          {/* Soft Reset Section - Keep this section as is */}
+          {/* Soft Reset Section - Updated with reset user voting option */}
           <section className="admin-section">
             <h2>Soft Reset</h2>
-            <p>Reduce all votes by a percentage to rebalance the tier list.</p>
+            <p>Reduce all votes by a percentage to rebalance the tier list, clear all votes, or reset user voting to allow users to vote again.</p>
             <form onSubmit={handleSoftReset}>
               <div className="form-group">
                 <label>
@@ -355,13 +420,105 @@ const AdminPanel = () => {
                     value={resetPercentage}
                     onChange={(e) => setResetPercentage(e.target.value)}
                     required
+                    disabled={clearUserVotes || resetUserVoting}
                   />
                 </label>
               </div>
+              <div className="form-group checkbox-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={resetUserVoting}
+                    onChange={(e) => {
+                      setResetUserVoting(e.target.checked);
+                      if (e.target.checked) {
+                        setClearUserVotes(false);
+                      }
+                    }}
+                  />
+                  Reset user voting (allow users to vote again while preserving vote data)
+                </label>
+              </div>
+              <div className="form-group checkbox-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={clearUserVotes}
+                    onChange={(e) => {
+                      setClearUserVotes(e.target.checked);
+                      if (e.target.checked) {
+                        setResetUserVoting(false);
+                      }
+                    }}
+                  />
+                  Clear all votes (warning: this deletes all vote data)
+                </label>
+              </div>
               <button type="submit" disabled={loading}>
-                Apply Soft Reset
+                {clearUserVotes ? 'Clear All Votes' : resetUserVoting ? 'Reset User Voting' : 'Apply Soft Reset'}
               </button>
             </form>
+          </section>
+          
+          {/* Export/Import Section - New */}
+          <section className="admin-section">
+            <h2>Backup & Restore Votes</h2>
+            <p>Export votes to a file or import from a previous backup.</p>
+            
+            <div className="form-group">
+              <h3>Export Votes</h3>
+              <div className="export-controls">
+                <select 
+                  value={exportRole} 
+                  onChange={(e) => setExportRole(e.target.value)}
+                  disabled={loading}
+                >
+                  <option value="All">All Roles</option>
+                  <option value="Top">Top</option>
+                  <option value="Jungle">Jungle</option>
+                  <option value="Mid">Mid</option>
+                  <option value="ADC">ADC</option>
+                  <option value="Support">Support</option>
+                </select>
+                <button 
+                  onClick={handleExportVotes} 
+                  disabled={loading}
+                >
+                  Export Votes
+                </button>
+              </div>
+            </div>
+            
+            <div className="form-group">
+              <h3>Import Votes</h3>
+              <input
+                type="file"
+                accept=".json"
+                onChange={handleFileUpload}
+                disabled={loading}
+              />
+              
+              {importedVotes && (
+                <div className="import-options">
+                  <div className="checkbox-group">
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={replaceExistingVotes}
+                        onChange={(e) => setReplaceExistingVotes(e.target.checked)}
+                      />
+                      Replace existing votes (recommended)
+                    </label>
+                  </div>
+                  <button 
+                    onClick={handleImportVotes} 
+                    disabled={loading || !importedVotes}
+                  >
+                    Import Votes
+                  </button>
+                </div>
+              )}
+            </div>
           </section>
           
           {/* Testing Section - New */}

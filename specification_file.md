@@ -1,6 +1,6 @@
 # League of Legends Community Tier List Website Specification
-**Version**: 1.2  
-**Date**: March 15, 2025  
+**Version**: 1.4  
+**Date**: March 25, 2025  
 **Author**: Grok 3 (xAI) + Claude 3.7  
 **Purpose**: A minimalist, community-driven tier list for League of Legends champions, split by role, with up/down voting and admin controls.
 
@@ -18,12 +18,13 @@ This web application allows users to vote on League of Legends champions (up or 
    - Users can vote once per champion per role (up or down).
    - Voting is tracked via browser cookies (UUID stored client-side).
    - Votes are tallied and normalized to assign champions to tiers.
+   - User votes are visually displayed after voting and persist between sessions.
 
 2. **Tier Lists** ✅
    - Five separate tier lists: Top, Jungle, Mid, ADC, Support.
    - Tiers: God (1%), S (4%), A (15%), B (20%), C (20%), D (15%), F (4%), Shit (1%).
    - Percentages are applied per role, rounding up to the nearest whole champion.
-   - Champions start in B and C tiers until sufficient votes are collected.
+   - Champions start in B and C tiers until sufficient votes are collected (average 5 votes per champion).
 
 3. **Champion Roles** ✅
    - Champions can appear in multiple role-based tier lists (e.g., Maokai in Top, Jungle, Support).
@@ -35,25 +36,34 @@ This web application allows users to vote on League of Legends champions (up or 
    - Each tier list displays champion portraits (fetched from Riot API) with up/down arrows for voting.
    - Current tier standings are visible to users before voting.
    - Vote counts are hidden from users to prevent bias.
+   - User's previous votes are visually indicated and persist between sessions.
 
 5. **Admin Panel** ✅
    - Accessible via a secret URL with simple password authentication.
    - Features:
      - **Soft Reset**: Reduces all vote counts by a configurable percentage.
+     - **Reset User Voting**: Allows users to vote again while preserving vote data and tier standings.
      - **Modify Roles**: Add/remove roles for a champion.
      - **Snapshot Management**: Save and restore from snapshots.
      - **Testing Tools**: Simulate votes, verify tier distributions, and run health checks.
+     - **Vote Backup & Restore**: Export and import vote data for backup or migration.
 
 6. **Safety and Recovery** ✅
    - Snapshots are saved automatically daily.
    - Manual snapshot creation via admin panel.
    - Restore to a snapshot via admin panel to recover from issues.
+   - Vote data can be exported and imported for backup purposes.
 
 7. **Testing and Maintenance** ✅
    - Vote simulation for testing tier assignments.
    - Tier distribution verification to ensure correct percentages.
    - System health checks for monitoring.
    - API endpoint for automated monitoring.
+
+8. **Environment Management** ✅
+   - Separate development and production environments.
+   - Environment-specific database files.
+   - Configuration via environment variables.
 
 ---
 
@@ -65,31 +75,38 @@ This web application allows users to vote on League of Legends champions (up or 
 - ✅ Champion data fetching from Riot API
 - ✅ Vote recording and champion tier assignment
 - ✅ Responsive React frontend
-- ✅ Rate limiting for API requests
+- ✅ Rate limiting for API requests (250 votes per IP per day)
 - ✅ Admin panel with all required functionality
 - ✅ Automatic daily snapshots
 - ✅ Bayesian adjustment for fair tier assignment
 - ✅ Testing tools for vote simulation and verification
 - ✅ Health check endpoint for monitoring
 - ✅ Dark mode UI with customizable colors
+- ✅ Environment-specific configuration (dev/prod)
+- ✅ Production deployment to Render
+- ✅ Database persistence configuration
+- ✅ Vote UI persistence between user sessions
+- ✅ Vote backup and restore functionality
+- ✅ Reset user voting without losing tier data
 
-### Remaining Steps for Production Deployment
-1. **Server Deployment**:
-   - Choose a hosting provider (Replit, Heroku, Render, etc.)
-   - Set up environment variables:
-     - `ADMIN_PASSWORD` (required, strong password for admin access)
-     - `PORT` (optional, defaults to 5000)
-     - `NODE_ENV` (set to 'production' for production deployment)
-   - Configure persistent storage for the SQLite database
-   - Set up automatic backups (recommended daily)
+### Future Enhancements
+1. **Administration Improvements**:
+   - Enhanced vote reporting in admin panel
+   - Database backup and download functionality
+   - Admin authentication improvements (session-based)
+   - Analytics dashboard
 
-2. **Post-Deployment Verification**:
-   - Run the health check endpoint (`/api/health`)
-   - Verify database seeding works correctly
-   - Test voting functionality with simulated votes
-   - Confirm tier assignments update properly
-   - Test admin functions
-   - Verify responsive design on mobile devices
+2. **User Experience**:
+   - Champion search functionality
+   - Mobile app version
+   - User accounts (optional)
+   - Historical tier tracking
+
+3. **Performance & Infrastructure**:
+   - Migration to PostgreSQL for larger scale
+   - CDN integration for champion images
+   - API rate limiting refinements
+   - Automated testing pipeline
 
 ---
 
@@ -100,6 +117,7 @@ This web application allows users to vote on League of Legends champions (up or 
 - **Backend**: Node.js with Express for API and logic ✅
 - **Database**: SQLite for simplicity and portability ✅
 - **External APIs**: Riot Data Dragon for champion data ✅
+- **Deployment**: Render for hosting ✅
 
 ### Database Schema
 ```sql
@@ -132,6 +150,22 @@ CREATE TABLE snapshots (
 );
 ```
 
+### Environment Management ✅
+
+The application supports separate development and production environments:
+
+```javascript
+// Environment detection
+const isProduction = process.env.NODE_ENV === 'production';
+
+// Database file selection
+const dbFileName = isProduction ? 'tierlist-prod.db' : 'tierlist-dev.db';
+const dbDir = isProduction ? 
+  process.env.RENDER_DISK_PATH || '/opt/render/project/data' : // For Render deployment
+  path.join(__dirname, 'db');
+const dbFile = path.join(dbDir, dbFileName);
+```
+
 ### Voting Algorithm ✅
 
 #### Normalization
@@ -159,10 +193,23 @@ For each champion in a role:
 - Round up to the nearest whole champion per tier.
 - If rounding exceeds 100%, shift excess into B or C tiers (middle).
 
+### Vote Persistence and User Experience ✅
+- **Cookies**: Generate a UUID cookie per user (stored client-side in localStorage).
+- **Vote Tracking**: User's previous votes are fetched on page load and visually displayed.
+- **Vote Indication**: Active votes are highlighted to users so they know what they've already voted on.
+- **Vote UI Persistence**: Vote UI state persists between sessions, even after browser refresh.
+
 ### Fraud Prevention ✅
 - **Cookies**: Generate a UUID cookie per user (stored client-side and checked server-side).
-- **Rate Limiting**: Max 50 votes per IP address per 24 hours.
+- **Rate Limiting**: Max 250 votes per IP address per 24 hours.
 - **Soft Reset**: Admin ability to reduce vote counts across the board.
+- **Reset User Voting**: Admin ability to allow users to vote again while preserving tier data.
+
+### Vote Backup and Restore ✅
+- **Export Votes**: Download vote data as JSON for backup purposes, filterable by role.
+- **Import Votes**: Restore vote data from previously exported JSON file.
+- **Champion Mapping**: Import functionality maps champions by name rather than ID for flexibility.
+- **Replace Option**: Choice to replace existing votes or merge with current votes during import.
 
 ### Testing Tools ✅
 - **Vote Simulation**: Generate random votes for testing with configurable parameters:
@@ -176,97 +223,81 @@ For each champion in a role:
 
 ## Deployment
 
-### Production Deployment Steps
+### Current Deployment
+The application is currently deployed on Render (https://ls-tier-list.onrender.com/).
 
-#### Option 1: Replit Deployment
-1. **Create a new Replit project**:
-   - Choose Node.js as the template
-   - Import the codebase from GitHub or upload files
+### Environment Variables
+Required environment variables for production:
+- `NODE_ENV`: Set to `production`
+- `ADMIN_PASSWORD`: Admin panel access password
+- `PORT`: Port for the application to run on (set by Render automatically)
 
-2. **Configure environment variables**:
-   - In Replit, go to "Secrets" tab
-   - Add the following secrets:
-     - `ADMIN_PASSWORD`: Strong password for admin access
-     - `PORT`: 3000 (or let Replit assign one)
-     - `NODE_ENV`: production
+### Database Persistence
+To ensure database persistence between deployments:
+- A Render Persistent Disk is required
+- The database is stored at `/opt/render/project/data/tierlist-prod.db`
+- This path is configured in the application code
 
-3. **Initialize the application**:
-   - In the Replit shell, run:
-     ```
-     npm install
-     npm run init
-     ```
-   - This will install dependencies and seed the database
+### Deployment Process
 
-4. **Configure Replit to run the application**:
-   - In the `.replit` file, ensure the run command is:
-     ```
-     run = "npm start"
-     ```
+#### Initial Deployment
+1. **Create a Render Web Service**:
+   - Connect to GitHub repository
+   - Set build command: `npm run setup:prod`
+   - Set start command: `npm run start:prod`
+   - Add required environment variables
+   - Create and attach a persistent disk
 
-5. **Set up persistent storage**:
-   - Enable Replit's persistent storage feature
-   - Ensure the `db` directory is in the persistent storage path
+#### Updating the Production Application
+1. **Development Workflow**:
+   - Make changes in development environment
+   - Test locally using `npm run start:dev`
+   - Create a snapshot in production before deploying
+   - Push changes to GitHub repository
 
-#### Option 2: VPS/Cloud Deployment
-1. **Provision a server**:
-   - Minimum requirements: 1GB RAM, 1 CPU core
-   - Recommended OS: Ubuntu 20.04 LTS or newer
+2. **Automatic Deployment**:
+   - Render automatically deploys when changes are pushed to the main branch
+   - The database is preserved between deployments due to persistent storage
 
-2. **Install dependencies**:
-   ```bash
-   apt update && apt upgrade -y
-   apt install -y nodejs npm git
-   ```
+3. **Manual Deployment**:
+   - Go to Render dashboard
+   - Select the service
+   - Click "Manual Deploy" > "Deploy latest commit"
 
-3. **Clone the repository**:
-   ```bash
-   git clone https://github.com/yourusername/ls-tierlist.git
-   cd ls-tierlist
-   ```
+### Production Maintenance
 
-4. **Set up environment variables**:
-   ```bash
-   echo 'ADMIN_PASSWORD=your_secure_password' > .env
-   echo 'PORT=3000' >> .env
-   echo 'NODE_ENV=production' >> .env
-   ```
+#### Database Management
+1. **Snapshots**:
+   - Created automatically daily
+   - Should be manually created before updates
+   - Can be restored via admin panel
 
-5. **Install dependencies and initialize**:
-   ```bash
-   npm install
-   npm run init
-   ```
+2. **Vote Backup**:
+   - Export votes before significant changes
+   - Import votes if needed after changes
+   - Use snapshot system as additional safety measure
 
-6. **Set up process manager (PM2)**:
-   ```bash
-   npm install -g pm2
-   pm2 start server.js --name ls-tierlist
-   pm2 startup
-   pm2 save
-   ```
+#### Monitoring
+1. **Health Check**:
+   - `/api/health` endpoint provides system status
+   - Can be integrated with external monitoring tools
 
-7. **Set up reverse proxy (Nginx)**:
-   ```bash
-   apt install -y nginx
-   ```
-   Configure Nginx to proxy requests to the Node.js application
+2. **Error Reporting**:
+   - Server errors are logged in Render logs
+   - Application includes error handling middleware
 
-8. **Set up automatic backups**:
-   ```bash
-   mkdir -p /backups/ls-tierlist
-   ```
-   Create a cron job to copy the database file daily
+---
 
-### Directory Structure
+## Directory Structure
 ```
 ls-tierlist/
 ├── client/                  # React frontend
 │   ├── public/              # Static files
+│   ├── build/               # Production build output
 │   └── src/                 # React source code
 │       ├── components/      # React components
 │       └── App.js           # Main React component
-├── db/                      # SQLite database directory
+├── db/                      # SQLite database directory (development)
 ├── champion_roles/          # Champion role data
 │   └── champion_roles.json  # Official champion role data
 ├── server/                  # Server-side code
@@ -275,6 +306,7 @@ ls-tierlist/
 ├── server.js                # Express server main file
 ├── seed-champions.js        # Database seeding script
 ├── init.js                  # Initialization script
+├── .env.production          # Production environment template
 ├── package.json             # Node.js dependencies
 └── README.md                # Project documentation
 ```
@@ -290,10 +322,15 @@ ls-tierlist/
 - ✅ **Admin Panel**: Soft reset, role editing, snapshot management
 - ✅ **Testing**: API endpoints, core functionality, and testing tools
 - ✅ **UI Improvements**: Dark mode, responsive design, usability enhancements
+- ✅ **Environment Configuration**: Development/production environment separation
+- ✅ **Production Deployment**: Successfully deployed to Render with persistent storage
+- ✅ **Vote UI Persistence**: User votes persist between sessions
+- ✅ **Vote Backup & Restore**: Vote export/import functionality
+- ✅ **User Voting Reset**: Allow users to vote again without losing tier data
 
-### Production Readiness Checklist
+### Production Readiness
 - ✅ **Security**: Password protection, rate limiting
-- ✅ **Data Integrity**: Snapshots, backups, validation
+- ✅ **Data Integrity**: Snapshots, database persistence, vote backup/restore
 - ✅ **Performance**: Optimized database queries, transaction support
 - ✅ **Monitoring**: Health check endpoint, error logging
 - ✅ **Documentation**: Updated specification, deployment instructions

@@ -66,7 +66,7 @@ const assignTiersToChampions = (champions) => {
     sum + (champ.totalVotes || 0), 0);
   
   // If there's minimal voting activity, place champions in B and C tiers only
-  if (totalVotesAcrossAllChampions < sortedChampions.length * 5) { // Threshold: avg 5 votes per champion
+  if (totalVotesAcrossAllChampions < sortedChampions.length * 3) { // Threshold: avg 3 votes per champion
     // Split champions roughly in half between B and C tiers
     const totalChampions = sortedChampions.length;
     const halfIndex = Math.floor(totalChampions / 2);

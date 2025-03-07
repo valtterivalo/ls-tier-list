@@ -87,7 +87,7 @@ app.get('/api/champions', (req, res) => {
 });
 
 // Voting Route - Apply rate limiting
-app.post('/api/vote', rateLimit(50), (req, res) => {
+app.post('/api/vote', rateLimit(250), (req, res) => {
   const { champion_id, role, user_cookie, vote } = req.body;
   
   if (!champion_id || !role || !user_cookie || ![-1, 1].includes(vote)) {
@@ -160,32 +160,87 @@ app.get('/api/tiers/:role', (req, res) => {
   });
 });
 
+// New endpoint to get user votes for a specific role
+app.get('/api/user-votes/:role', (req, res) => {
+  const { role } = req.params;
+  const { user_cookie } = req.query;
+  
+  if (!user_cookie) {
+    return res.status(400).json({ error: 'User cookie is required' });
+  }
+  
+  const validRoles = ['Top', 'Jungle', 'Mid', 'ADC', 'Support'];
+  if (!validRoles.includes(role)) {
+    return res.status(400).json({ error: 'Invalid role specified' });
+  }
+  
+  // Get all votes for this user in this role
+  db.all(`
+    SELECT champion_id, vote
+    FROM votes
+    WHERE user_cookie = ? AND role = ?
+  `, [user_cookie, role], (err, votes) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    
+    // Transform into a more convenient format
+    const userVotes = {};
+    votes.forEach(vote => {
+      userVotes[vote.champion_id] = vote.vote;
+    });
+    
+    res.json(userVotes);
+  });
+});
+
 // Admin Routes
 app.post('/api/admin/soft-reset', (req, res) => {
-  const { percentage, password } = req.body;
+  const { percentage, clearUserVotes, resetUserVoting, password } = req.body;
   
   // Simple authentication for MVP
   if (password !== process.env.ADMIN_PASSWORD) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  // Validate percentage
-  if (!percentage || percentage < 0 || percentage > 100) {
-    return res.status(400).json({ error: 'Invalid percentage value' });
-  }
-
   // Create a snapshot before reset
   createSnapshot(`pre-reset-${new Date().toISOString()}`);
 
-  // Apply soft reset
-  db.run('UPDATE votes SET vote = ROUND(vote * (1 - ? / 100))', 
-    [percentage], 
-    function(err) {
+  // If resetUserVoting is true, modify user cookies to allow users to vote again
+  if (resetUserVoting) {
+    const resetSuffix = `-reset-${Date.now()}`;
+    db.run('UPDATE votes SET user_cookie = user_cookie || ?', 
+      [resetSuffix], 
+      function(err) {
+        if (err) {
+          return res.status(500).json({ error: err.message });
+        }
+        res.json({ message: `User voting reset successfully. Users can now vote again.` });
+      });
+  }
+  // If clearUserVotes is true, delete all votes
+  else if (clearUserVotes) {
+    db.run('DELETE FROM votes', function(err) {
       if (err) {
         return res.status(500).json({ error: err.message });
       }
-      res.json({ message: `Soft reset applied with ${percentage}% reduction` });
+      res.json({ message: `All votes cleared successfully` });
     });
+  } 
+  // Otherwise apply percentage-based soft reset
+  else if (percentage && percentage > 0 && percentage <= 100) {
+    // Apply soft reset (reduce vote values)
+    db.run('UPDATE votes SET vote = ROUND(vote * (1 - ? / 100))', 
+      [percentage], 
+      function(err) {
+        if (err) {
+          return res.status(500).json({ error: err.message });
+        }
+        res.json({ message: `Soft reset applied with ${percentage}% reduction` });
+      });
+  } else {
+    return res.status(400).json({ error: 'Invalid reset parameters. Please provide either percentage, clearUserVotes, or resetUserVoting.' });
+  }
 });
 
 // Get all snapshots
@@ -762,6 +817,180 @@ const setupDailySnapshot = () => {
   
   console.log(`Scheduled daily snapshots. First snapshot in ${Math.round(msUntilMidnight / (1000 * 60 * 60))} hours.`);
 };
+
+// Admin - Export votes by role
+app.get('/api/admin/export-votes', (req, res) => {
+  const { password, role } = req.query;
+  
+  if (password !== process.env.ADMIN_PASSWORD) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  
+  let query = `
+    SELECT c.name, c.id as champion_id, v.role, 
+           SUM(CASE WHEN v.vote = 1 THEN 1 ELSE 0 END) as upvotes,
+           SUM(CASE WHEN v.vote = -1 THEN 1 ELSE 0 END) as downvotes
+    FROM champions c
+    LEFT JOIN votes v ON c.id = v.champion_id
+  `;
+  
+  const params = [];
+  if (role) {
+    query += ` WHERE v.role = ? `;
+    params.push(role);
+  }
+  
+  query += ` GROUP BY c.id, v.role `;
+  
+  db.all(query, params, (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    
+    // Format for export
+    const formattedData = rows.map(row => ({
+      name: row.name,
+      champion_id: row.champion_id,
+      role: row.role || 'None',
+      upvotes: row.upvotes || 0,
+      downvotes: row.downvotes || 0
+    }));
+    
+    // Set headers for file download
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename=vote-export-${role || 'all'}-${new Date().toISOString().split('T')[0]}.json`);
+    
+    res.json(formattedData);
+  });
+});
+
+// Admin - Import votes from JSON backup
+app.post('/api/admin/import-votes', (req, res) => {
+  const { password, votes, replace } = req.body;
+  
+  if (password !== process.env.ADMIN_PASSWORD) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  
+  if (!votes || !Array.isArray(votes) || votes.length === 0) {
+    return res.status(400).json({ error: 'Invalid votes data' });
+  }
+  
+  // Create a snapshot before import
+  createSnapshot(`pre-import-${new Date().toISOString()}`);
+  
+  // First, look up all champion IDs by name to ensure we have correct mappings
+  const championNames = [...new Set(votes.map(v => v.name))];
+  const placeholders = championNames.map(() => '?').join(',');
+  
+  db.all(`SELECT id, name FROM champions WHERE name IN (${placeholders})`, championNames, (err, champions) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    
+    // Create a mapping from name to ID
+    const championMap = {};
+    champions.forEach(champ => {
+      championMap[champ.name] = champ.id;
+    });
+    
+    // Find any champions that weren't in the database
+    const missingChampions = championNames.filter(name => !championMap[name]);
+    if (missingChampions.length > 0) {
+      console.warn(`Warning: Some champions were not found in the database: ${missingChampions.join(', ')}`);
+    }
+    
+    db.serialize(() => {
+      db.run('BEGIN TRANSACTION');
+      
+      // If replace is true, clear existing votes for the affected roles
+      if (replace) {
+        // Get unique roles from the import data
+        const roles = [...new Set(votes.map(v => v.role).filter(r => r))];
+        
+        if (roles.length > 0) {
+          const rolePlaceholders = roles.map(() => '?').join(',');
+          db.run(`DELETE FROM votes WHERE role IN (${rolePlaceholders})`, roles, (err) => {
+            if (err) {
+              db.run('ROLLBACK');
+              return res.status(500).json({ error: err.message });
+            }
+          });
+        }
+      }
+      
+      // Generate a single user cookie for all imported votes
+      const importUserCookie = `import-${Date.now()}`;
+      
+      // Process each vote
+      let upvoteCount = 0;
+      let downvoteCount = 0;
+      let skippedCount = 0;
+      
+      // Process each champion's votes
+      for (const voteData of votes) {
+        const { name, role, upvotes = 0, downvotes = 0 } = voteData;
+        
+        // Look up the correct champion ID from our mapping
+        const champion_id = championMap[name];
+        
+        // Skip if champion not found in the database
+        if (!champion_id || !role) {
+          skippedCount++;
+          continue;
+        }
+        
+        // Insert upvotes
+        for (let i = 0; i < upvotes; i++) {
+          db.run(
+            'INSERT INTO votes (champion_id, role, user_cookie, vote) VALUES (?, ?, ?, ?)',
+            [champion_id, role, `${importUserCookie}-up-${i}`, 1],
+            function(err) {
+              if (err && err.code !== 'SQLITE_CONSTRAINT') {
+                console.error(`Error importing upvote for champion ${name}:`, err);
+              } else if (!err) {
+                upvoteCount++;
+              }
+            }
+          );
+        }
+        
+        // Insert downvotes
+        for (let i = 0; i < downvotes; i++) {
+          db.run(
+            'INSERT INTO votes (champion_id, role, user_cookie, vote) VALUES (?, ?, ?, ?)',
+            [champion_id, role, `${importUserCookie}-down-${i}`, -1],
+            function(err) {
+              if (err && err.code !== 'SQLITE_CONSTRAINT') {
+                console.error(`Error importing downvote for champion ${name}:`, err);
+              } else if (!err) {
+                downvoteCount++;
+              }
+            }
+          );
+        }
+      }
+      
+      // Commit the transaction
+      db.run('COMMIT', (err) => {
+        if (err) {
+          db.run('ROLLBACK');
+          return res.status(500).json({ error: err.message });
+        }
+        
+        res.json({
+          message: 'Votes imported successfully',
+          stats: {
+            upvotes: upvoteCount,
+            downvotes: downvoteCount,
+            total: upvoteCount + downvoteCount,
+            skipped: skippedCount
+          }
+        });
+      });
+    });
+  });
+});
 
 // Serve static assets if in production
 if (isProduction) {

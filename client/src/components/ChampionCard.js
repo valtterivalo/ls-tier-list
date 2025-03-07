@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import './ChampionCard.css';
 
-const ChampionCard = ({ champion, role, onVote }) => {
-  const [userVote, setUserVote] = useState(null);
+const ChampionCard = ({ champion, role, userVote, onVote }) => {
   const [isVoting, setIsVoting] = useState(false);
 
   const handleVote = async (voteValue) => {
@@ -15,7 +14,6 @@ const ChampionCard = ({ champion, role, onVote }) => {
     setIsVoting(true);
     try {
       await onVote(champion.id, role, newVoteValue);
-      setUserVote(newVoteValue === 0 ? null : newVoteValue);
     } catch (error) {
       console.error('Error voting:', error);
     } finally {

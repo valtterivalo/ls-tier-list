@@ -5,6 +5,7 @@ import './TierList.css';
 
 const TierList = ({ role, userCookie, onVote }) => {
   const [champions, setChampions] = useState([]);
+  const [userVotes, setUserVotes] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -20,13 +21,27 @@ const TierList = ({ role, userCookie, onVote }) => {
     'Shit': '#000000' // Black
   };
 
-  // Fetch champions for this role
+  // Fetch champions and user's votes for this role
   useEffect(() => {
-    const fetchChampionsByRole = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`/api/tiers/${role}`);
-        setChampions(response.data);
+        
+        // Fetch champions for this role
+        const championsResponse = await axios.get(`/api/tiers/${role}`);
+        setChampions(championsResponse.data);
+        
+        // Fetch user's votes if userCookie exists
+        if (userCookie) {
+          try {
+            const votesResponse = await axios.get(`/api/user-votes/${role}?user_cookie=${userCookie}`);
+            setUserVotes(votesResponse.data);
+          } catch (votesError) {
+            console.error(`Error fetching user votes:`, votesError);
+            // Continue anyway - we'll just show no votes
+          }
+        }
+        
         setLoading(false);
       } catch (err) {
         setError(`Failed to fetch ${role} champions. Please try again later.`);
@@ -35,8 +50,33 @@ const TierList = ({ role, userCookie, onVote }) => {
       }
     };
 
-    fetchChampionsByRole();
-  }, [role]);
+    fetchData();
+  }, [role, userCookie]);
+
+  // Custom vote handler that updates local state
+  const handleVoteWithState = async (championId, role, voteValue) => {
+    try {
+      await onVote(championId, role, voteValue);
+      
+      // Update local state of user votes
+      if (voteValue === 0) {
+        const newUserVotes = {...userVotes};
+        delete newUserVotes[championId];
+        setUserVotes(newUserVotes);
+      } else {
+        setUserVotes(prev => ({
+          ...prev,
+          [championId]: voteValue
+        }));
+      }
+      
+      // Fetch updated tier list
+      const response = await axios.get(`/api/tiers/${role}`);
+      setChampions(response.data);
+    } catch (err) {
+      console.error('Error handling vote:', err);
+    }
+  };
 
   // Group champions by tier
   const championsByTier = champions.reduce((acc, champion) => {
@@ -86,7 +126,8 @@ const TierList = ({ role, userCookie, onVote }) => {
                   key={`${champion.id}-${role}`}
                   champion={champion}
                   role={role}
-                  onVote={onVote}
+                  userVote={userVotes[champion.id] || null}
+                  onVote={handleVoteWithState}
                 />
               ))}
             </div>
