@@ -21,6 +21,9 @@ const ChampionCard = ({ champion, role, userVote, onVote }) => {
     }
   };
 
+  // Calculate total votes
+  const totalVotes = (champion.upvotes || 0) + (champion.downvotes || 0);
+
   return (
     <div className="champion-card">
       <div className="champion-portrait">
@@ -28,7 +31,7 @@ const ChampionCard = ({ champion, role, userVote, onVote }) => {
       </div>
       <div className="champion-info">
         <h3>{champion.name}</h3>
-        {/* Vote counts removed as requested */}
+        <div className="vote-count">{totalVotes} votes</div>
       </div>
       <div className="vote-buttons">
         <button 

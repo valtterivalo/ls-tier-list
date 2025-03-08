@@ -81,10 +81,10 @@ const assignTiersToChampions = (champions) => {
   // Define tier percentages for normal assignment
   const tierPercentages = {
     'God': 0.01,  // Top 1%
-    'S': 0.04,    // Next 4%
+    'S': 0.08,    // Next 8% (increased from 4%)
     'A': 0.15,    // Next 15%
-    'B': 0.20,    // Next 20%
-    'C': 0.20,    // Next 20%
+    'B': 0.18,    // Next 18% (reduced from 20%)
+    'C': 0.18,    // Next 18% (reduced from 20%)
     'D': 0.15,    // Next 15%
     'F': 0.04,    // Next 4%
     'Shit': 0.01  // Bottom 1%

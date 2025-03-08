@@ -1,6 +1,6 @@
 # League of Legends Community Tier List Website Specification
-**Version**: 1.4  
-**Date**: March 25, 2025  
+**Version**: 1.5  
+**Date**: March 30, 2025  
 **Author**: Grok 3 (xAI) + Claude 3.7  
 **Purpose**: A minimalist, community-driven tier list for League of Legends champions, split by role, with up/down voting and admin controls.
 
@@ -22,9 +22,9 @@ This web application allows users to vote on League of Legends champions (up or 
 
 2. **Tier Lists** ✅
    - Five separate tier lists: Top, Jungle, Mid, ADC, Support.
-   - Tiers: God (1%), S (4%), A (15%), B (20%), C (20%), D (15%), F (4%), Shit (1%).
+   - Tiers: God (1%), S (8%), A (15%), B (18%), C (18%), D (15%), F (4%), Shit (1%).
    - Percentages are applied per role, rounding up to the nearest whole champion.
-   - Champions start in B and C tiers until sufficient votes are collected (average 5 votes per champion).
+   - Champions start in B and C tiers until sufficient votes are collected (average 3 votes per champion).
 
 3. **Champion Roles** ✅
    - Champions can appear in multiple role-based tier lists (e.g., Maokai in Top, Jungle, Support).
@@ -35,7 +35,7 @@ This web application allows users to vote on League of Legends champions (up or 
    - Dark mode design with customizable color scheme (CSS variables).
    - Each tier list displays champion portraits (fetched from Riot API) with up/down arrows for voting.
    - Current tier standings are visible to users before voting.
-   - Vote counts are hidden from users to prevent bias.
+   - Total votes per champion are displayed, but individual up/down counts are hidden to prevent bias.
    - User's previous votes are visually indicated and persist between sessions.
 
 5. **Admin Panel** ✅
@@ -88,6 +88,8 @@ This web application allows users to vote on League of Legends champions (up or 
 - ✅ Vote UI persistence between user sessions
 - ✅ Vote backup and restore functionality
 - ✅ Reset user voting without losing tier data
+- ✅ Improved tier distribution with more champions in S tier
+- ✅ Total vote counts display per champion
 
 ### Future Enhancements
 1. **Administration Improvements**:
@@ -180,13 +182,13 @@ For each champion in a role:
 
 #### Tier Assignment
 - Sort champions by `adjusted_score` descending within each role.
-- If average votes per champion is below threshold (5), place champions in B and C tiers only.
+- If average votes per champion is below threshold (3), place champions in B and C tiers only.
 - Otherwise, assign to tiers based on percentage distribution:
   - Top 1% → God
-  - Next 4% → S
+  - Next 8% → S (increased from 4%)
   - Next 15% → A
-  - Next 20% → B
-  - Next 20% → C
+  - Next 18% → B (reduced from 20%)
+  - Next 18% → C (reduced from 20%)
   - Next 15% → D
   - Next 4% → F
   - Bottom 1% → Shit
@@ -198,6 +200,7 @@ For each champion in a role:
 - **Vote Tracking**: User's previous votes are fetched on page load and visually displayed.
 - **Vote Indication**: Active votes are highlighted to users so they know what they've already voted on.
 - **Vote UI Persistence**: Vote UI state persists between sessions, even after browser refresh.
+- **Vote Count Display**: Total votes per champion are shown, but individual up/down counts remain hidden.
 
 ### Fraud Prevention ✅
 - **Cookies**: Generate a UUID cookie per user (stored client-side and checked server-side).
@@ -327,6 +330,8 @@ ls-tierlist/
 - ✅ **Vote UI Persistence**: User votes persist between sessions
 - ✅ **Vote Backup & Restore**: Vote export/import functionality
 - ✅ **User Voting Reset**: Allow users to vote again without losing tier data
+- ✅ **Tier Distribution Rebalance**: Modified tier percentages to allow more champions in S tier
+- ✅ **UI Enhancements**: Added total vote count display and fixed layout shifts
 
 ### Production Readiness
 - ✅ **Security**: Password protection, rate limiting
